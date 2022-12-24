@@ -95,6 +95,8 @@ __global__ void solution(float* x, int Nx, float h_x, float* y, int Ny, float h_
 				t_prev_layer[j * Nx + i] + q(x[i], h_x, y[j], h_y, counter_for_cells));
 		}
 	}
+	
+	__syncthreads();
 
 	if (i == 0) {
 		y_x_layer[j * Nx + 0] = (gamma_x(y[j], t_i)[0] * h_x - alpha_x(y[j], t_i)[0] * y_x_layer[j * Nx + 1]) / (beta_x(y[j], t_i)[0] * h_x - alpha_x(y[j], t_i)[0]);
