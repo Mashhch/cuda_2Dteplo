@@ -1,8 +1,13 @@
-﻿
-#include <stdio.h>
-#include <stdlib.h>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include <assert.h>
+#include <device_functions.h>
+#include <cuda.h>
 #include <iostream>
 #include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>  
 
 using namespace std;
 // условие устойчивости Куранта
@@ -96,13 +101,6 @@ float* solution(float* x, int Nx, float h_x, float* y, int Ny, float h_y, float*
 	}
 
 
-	
-	for (int j = 0; j < Ny; j++) {
-		for (int i = 0; i < Nx; i++) {
-			if (y_x_layer[j * Nx + i] != 0)
-				printf("time t = %d j = %d i = %d  u = %f \n", t_i, j, i, y_x_layer[j * Nx + i]);
-		}
-	}
 	return y_x_layer;
 }
 
@@ -117,11 +115,11 @@ int main(int argc, char **argv) {
 	float xmax = 1;
 	float ymin = -2;
 	float ymax = 2;
-	float h_x = 0.1;
-	float h_y = 0.2;
-	int Nt = 10;
-	int Nx = 21;
-	int Ny = 21;
+	int Nx = 401;
+	int Ny = 401;
+	float h_x = (xmax - xmin) / (Nx - 1);
+	float h_y = (ymax - ymin) / (Ny - 1);
+	int Nt = 100;
 	float* x = (float*)malloc(sizeof(float) * Nx);
 	float* y = (float*)malloc(sizeof(float) * Ny);
 	float* t = (float*)malloc(sizeof(float) * Nt);
@@ -133,6 +131,7 @@ int main(int argc, char **argv) {
 	}
 	float* y_x_layer = (float*)malloc(Nx * Ny * sizeof(float));
 	float* t_prev_layer = (float*)malloc(Nx * Ny * sizeof(float));
+
 	for (int i = 0; i < Nx; i++) {
 		for (int j = 0; j < Ny; j++) {
 			y_x_layer[j * Nx + i] = 0;
@@ -140,19 +139,19 @@ int main(int argc, char **argv) {
 		}
 	}
 	float* swap;
+	double time_spent1 = 0.0;
+
+	clock_t begin1 = clock();
 	for (int t_i = 0; t_i < Nt; t_i++) {
 		swap = solution(x, Nx, h_x, y, Ny, h_y, t_prev_layer, y_x_layer, t_i, a, r);
 		y_x_layer = t_prev_layer;
 		t_prev_layer = swap;
-
 	}
 
-	printf("Reshenie \n");
-	for (int j = 0; j < Ny; j++) {
-		for (int i = 0; i < Nx; i++) {
-			if (t_prev_layer[j * Nx + i] != 0)
-				printf(" j = %d i = %d  t_prev = %f \n",  j, i, t_prev_layer[j * Nx + i]);
-		}
-		printf("\n");
-	}
+	clock_t end1 = clock();
+
+	time_spent1 += (double)(end1 - begin1) / CLOCKS_PER_SEC;
+
+	printf("The elapsed time is %f seconds", time_spent1);
+
 }
